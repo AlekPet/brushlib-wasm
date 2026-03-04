@@ -8,7 +8,7 @@ Demo: [https://eliot-akira.github.io/brushlib-wasm](https://eliot-akira.github.i
 
 # Painter demo:
 
-[https://alekpet.github.io/brushlib-wasm/](https://eliot-akira.github.io/brushlib-wasm/docs)
+[https://alekpet.github.io/brushlib-wasm/](https://alekpet.github.io/brushlib-wasm/)
 
 ## Build
 
