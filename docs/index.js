@@ -1,4 +1,115 @@
 const { brushlib } = window;
+
+function hex2rgb(hex) {
+  return [
+    ("0x" + hex[1] + hex[2]) | 0,
+    ("0x" + hex[3] + hex[4]) | 0,
+    ("0x" + hex[5] + hex[6]) | 0,
+  ];
+}
+
+function clamp(v, min, max) {
+  if (v > max) return max;
+  else if (v < min) return min;
+  else return v;
+}
+
+class ColorHSV {
+  constructor(h_, s_, v_) {
+    this.h = h_;
+    this.s = s_;
+    this.v = v_;
+    this.r = 0;
+    this.g = 0;
+    this.b = 0;
+  }
+
+  hsv_to_rgb_float() {
+    let i;
+    let f, w, q, t;
+    let r = 0.0,
+      g = 0.0,
+      b = 0.0; // silence gcc warning
+
+    let { h, s, v } = this;
+    h = h - Math.floor(h);
+    s = clamp(s, 0.0, 1.0);
+    v = clamp(v, 0.0, 1.0);
+
+    let hue;
+    if (s === 0.0) {
+      r = v;
+      g = v;
+      b = v;
+    } else {
+      hue = h;
+      if (hue === 1.0) hue = 0.0;
+      hue *= 6.0;
+      i = Math.floor(hue);
+      f = hue - i;
+      w = v * (1.0 - s);
+      q = v * (1.0 - s * f);
+      t = v * (1.0 - s * (1.0 - f));
+
+      switch (i) {
+        case 0:
+          r = v;
+          g = t;
+          b = w;
+          break;
+        case 1:
+          r = q;
+          g = v;
+          b = w;
+          break;
+        case 2:
+          r = w;
+          g = v;
+          b = t;
+          break;
+        case 3:
+          r = w;
+          g = q;
+          b = v;
+          break;
+        case 4:
+          r = t;
+          g = w;
+          b = v;
+          break;
+        case 5:
+          r = v;
+          g = w;
+          b = q;
+          break;
+      }
+    }
+
+    this.r = r;
+    this.g = g;
+    this.b = b;
+  }
+}
+
+function hsv2rgbHex(h, s, v) {
+  const colorhsv = new ColorHSV(h, s, v);
+  colorhsv.hsv_to_rgb_float();
+
+  const rr = Math.floor(colorhsv.r * 255);
+  const gg = Math.floor(colorhsv.g * 255);
+  const bb = Math.floor(colorhsv.b * 255);
+
+  let rr_hex = rr.toString(16);
+  let gg_hex = gg.toString(16);
+  let bb_hex = bb.toString(16);
+
+  if (rr_hex.length < 2) rr_hex = `0${rr_hex}`;
+  if (gg_hex.length < 2) gg_hex = `0${gg_hex}`;
+  if (bb_hex.length < 2) bb_hex = `0${bb_hex}`;
+
+  return { rgb: [rr, gg, bb], hex: `#${rr_hex}${gg_hex}${bb_hex}` };
+}
+
 // Show brushes
 async function viewAllBrushes() {
   const canvas = document.querySelector("#canvas1");
@@ -19,7 +130,7 @@ async function viewAllBrushes() {
   ctx.font = "16px sans-serif";
   ctx.fillStyle = "black";
 
-  const maxX = canvas1.width;
+  const maxX = canvas.width;
 
   for (const brush of brushes) {
     painter1.setBrush(brush);
@@ -42,6 +153,14 @@ async function viewAllBrushes() {
   }
 }
 
+function setBrushColor(currentBrush) {
+  let color_h = currentBrush.settings.color_h.base_value || 0;
+  let color_s = currentBrush.settings.color_s.base_value || 0;
+  let color_v = currentBrush.settings.color_v.base_value || 0;
+
+  return hsv2rgbHex(color_h, color_s, color_v);
+}
+
 // Painter
 async function painterBrush() {
   const canvas = document.querySelector("#canvas2");
@@ -57,8 +176,10 @@ async function painterBrush() {
   ctx.fillStyle = "black";
 
   let currentBrush = brushes[0];
+  const start_colors = setBrushColor(currentBrush);
   painter.setBrush(currentBrush);
   painter.setBrushSize(currentBrush.size);
+  painter.setColor(...start_colors.rgb);
 
   const boxControl = document.createElement("div");
   boxControl.className = "boxControl";
@@ -75,14 +196,20 @@ async function painterBrush() {
   const sizeBs = document.createElement("span");
   sizeBs.textContent = `Size: ${currentBrush.size}`;
 
+  const selectBrush = document.createElement("select");
+
+  const setColor = document.createElement("input");
+  const setColorText = document.createElement("span");
+  setColorText.textContent = start_colors.hex;
+  setColor.type = "color";
+  setColor.value = start_colors.hex;
+
   sizeB.addEventListener("input", (e) => {
     const v = +e.target.value;
     painter.setBrushSize(v);
     sizeBs.textContent = `Size: ${v}`;
   });
   boxControlSize.append(sizeB, sizeBs);
-
-  const selectBrush = document.createElement("select");
 
   brushes.forEach((b) => {
     const opt = document.createElement("option");
@@ -97,9 +224,25 @@ async function painterBrush() {
     painter.setBrushSize(currentBrush.size);
     sizeBs.textContent = `Size: ${currentBrush.size}`;
     sizeB.value = currentBrush.size;
+    const { rgb, hex } = setBrushColor(currentBrush);
+    painter.setColor(...rgb);
+    setColor.value = hex;
+    setColorText.textContent = hex;
   });
 
-  boxControl.append(selectBrush, boxControlSize);
+  setColor.addEventListener("input", (e) => {
+    const [r, g, b] = hex2rgb(e.target.value);
+    painter.setColor(r, g, b);
+    setColorText.textContent = hex;
+  });
+
+  boxControl.append(
+    selectBrush,
+    boxControlSize,
+    document.createTextNode("Color: "),
+    setColor,
+    setColorText,
+  );
   document.body.append(boxControl);
 
   let pointerMoveHandler = pointermove;
