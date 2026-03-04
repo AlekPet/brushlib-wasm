@@ -6,6 +6,10 @@ Demo: [https://eliot-akira.github.io/brushlib-wasm](https://eliot-akira.github.i
 
 ![Screenshot](./screenshot.jpeg)
 
+# Painter demo:
+
+[https://alekpet.github.io/brushlib-wasm/](https://eliot-akira.github.io/brushlib-wasm/docs)
+
 ## Build
 
 Built with [Emscripten](https://emscripten.org/docs/getting_started/downloads.html) 3.1.26
