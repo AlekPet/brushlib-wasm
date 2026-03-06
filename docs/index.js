@@ -233,7 +233,7 @@ async function painterBrush() {
   setColor.addEventListener("input", (e) => {
     const [r, g, b] = hex2rgb(e.target.value);
     painter.setColor(r, g, b);
-    setColorText.textContent = hex;
+    setColorText.textContent = e.target.value;
   });
 
   boxControl.append(
@@ -252,7 +252,7 @@ async function painterBrush() {
   function pointerdown(evt) {
     let curX = evt.clientX;
     let curY = evt.clientY;
-    t1 = new Date().getTime();
+    t1 = 0;
     canvas.addEventListener("pointermove", pointerMoveHandler);
     painter.newStroke(curX, curY);
   }
@@ -268,8 +268,9 @@ async function painterBrush() {
     if (!pressure) pressure = pressurePointer;
     curX = evt.clientX;
     curY = evt.clientY;
-
-    painter.stroke(curX, curY, 1, 1, 0, 0);
+    const dt = (t1 ? evt.timeStamp - t1 : 0) / 1000;
+    t1 = evt.timeStamp;
+    painter.stroke(curX, curY, dt, 1, 0, 0);
   }
 }
 
