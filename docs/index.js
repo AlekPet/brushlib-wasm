@@ -119,10 +119,10 @@ async function viewAllBrushes() {
 
   let i = 0;
   const brushAreaHeight = 40;
-  const brushAreaMarginX = 20;
+  const brushAreaMarginX = 150;
 
   // const rect = document.body.getBoundingClientRect()
-  canvas.width = 600; // window.innerWidth // rect.right - rect.left
+  canvas.width = 800; // window.innerWidth // rect.right - rect.left
   canvas.height = brushes.length * brushAreaHeight; // window.innerHeight // rect.bottom - rect.top
 
   // canvas.style.backgroundColor = 'rgb(39, 43, 54)'
@@ -147,7 +147,7 @@ async function viewAllBrushes() {
     painter1.stroke(brushAreaMarginX, y, 0, 1, 0, 0);
     painter1.stroke(maxX - brushAreaMarginX, y, 1, 1, 0, 0);
 
-    // ctx.fillText(brush.name, 25, y)
+    ctx.fillText(brush.name, 25, y);
 
     i++;
   }
